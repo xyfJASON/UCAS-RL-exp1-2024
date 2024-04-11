@@ -1,16 +1,12 @@
 import os
-import math
 import yaml
 import argparse
 import datetime
-from tqdm import tqdm
 
 import numpy as np
 
-from agent import Agent
-from env import Environment
-from action import DiscreteActionSpace
-from state import State, DiscreteStateSpace
+from envs.pendulum import PendulumDiscObsEnv
+from learners.q_learning import QLearning
 from utils import plot, animate_pendulum
 
 
@@ -20,7 +16,7 @@ def get_parser():
     parser.add_argument('--gamma', type=float, default=0.98, help='discount factor')
     parser.add_argument('--epsilon', type=float, default=0.1, help='epsilon-greedy policy')
     parser.add_argument('--episodes', type=int, default=1000, help='number of episodes')
-    parser.add_argument('--episode_steps', type=int, default=1000, help='number of steps for each episode')
+    parser.add_argument('--episode_length', type=int, default=1000, help='length of each episode')
     parser.add_argument('--num_disc_alpha', type=int, default=20, help='discretization of alpha')
     parser.add_argument('--num_disc_alpha_dot', type=int, default=20, help='discretization of alpha_dot')
     parser.add_argument('--num_actions', type=int, default=3, help='number of actions')
@@ -36,48 +32,27 @@ def main():
         yaml.dump(args.__dict__, f, default_flow_style=False)
 
     # Initialize
-    env = Environment()
-    agent = Agent(
-        epsilon=args.epsilon,
-        state_space=DiscreteStateSpace(
-            num_disc_alpha=args.num_disc_alpha,
-            num_disc_alpha_dot=args.num_disc_alpha_dot,
-        ),
-        action_space=DiscreteActionSpace(num_actions=args.num_actions),
+    env = PendulumDiscObsEnv(
+        num_disc_alpha=args.num_disc_alpha,
+        num_disc_alpha_dot=args.num_disc_alpha_dot,
+        num_actions=args.num_actions,
     )
+    learner = QLearning(env)
 
     # Train
-    for _ in tqdm(range(args.episodes)):
-        state = State(alpha=-math.pi, alpha_dot=0)
-        for _ in range(args.episode_steps):
-            # agent: s_t => a_t
-            action = agent.apply_epsilon_greedy_policy(state)
-            # env: s_t, a_t => r_{t+1}, s_{t+1}
-            next_state, reward = env.update(state, action)
-            # q-learning: update Q(s_t, a_t)
-            state_idx = agent.state_to_idx(state)
-            action_idx = agent.action_to_idx(action)
-            next_state_idx = agent.state_to_idx(next_state)
-            next_action_idx = np.argmax(agent.Q[next_state_idx])
-            agent.Q[state_idx, action_idx] += args.alpha * (
-                reward + args.gamma * agent.Q[next_state_idx, next_action_idx] -
-                agent.Q[state_idx, action_idx]
-            )
-            # next state: s_{t+1}
-            state = next_state
+    learner.train(
+        episodes=args.episodes,
+        episode_length=args.episode_length,
+        epsilon=args.epsilon,
+        learning_rate=args.alpha,
+        discount_factor=args.gamma,
+    )
 
     # Save Q-table
-    agent.saveq(os.path.join(logdir, 'q_table.npy'))
+    np.save(os.path.join(logdir, 'q_table.npy'), learner.Q)
 
     # Test
-    state = State(alpha=-math.pi, alpha_dot=0)
-    states, actions, rewards = [], [], []
-    for _ in range(1000):
-        action = agent.apply_greedy_policy(state)
-        state, reward = env.update(state, action)
-        states.append(state)
-        actions.append(action)
-        rewards.append(reward)
+    states, actions, rewards = learner.test(episode_length=1000)
     plot(states, actions, rewards, os.path.join(logdir, 'test.png'))
     animate_pendulum(states, actions, os.path.join(logdir, 'test.mp4'))
 

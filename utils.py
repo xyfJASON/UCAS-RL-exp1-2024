@@ -33,7 +33,7 @@ def animate_pendulum(states, actions, save_path: str):
     xs = [math.sin(s.alpha) for s in states]
     ys = [math.cos(s.alpha) for s in states]
 
-    fig = plt.figure(figsize=(4, 3))
+    fig = plt.figure(figsize=(4, 3), dpi=200)
     ax = fig.add_subplot(autoscale_on=False, xlim=(-1.5, 1.5), ylim=(-1.5, 1.5))
     ax.set_aspect('equal')
     ax.set_xticks([-1, 0, 1])
