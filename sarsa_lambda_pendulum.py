@@ -5,7 +5,7 @@ import datetime
 
 import numpy as np
 
-from learners.q_learning import QLearning
+from learners.sarsa_lambda import SarsaLambda
 from envs.pendulum import PendulumEnv, StateQuantizer, ActionQuantizer
 
 
@@ -15,6 +15,7 @@ def get_parser():
     parser.add_argument('--alpha', type=float, default=0.1, help='learning rate')
     parser.add_argument('--gamma', type=float, default=0.98, help='discount factor')
     parser.add_argument('--epsilon', type=float, default=0.1, help='epsilon-greedy policy')
+    parser.add_argument('--lambd', type=float, default=0.9, help='lambda for sarsa(lambda)')
     parser.add_argument('--episodes', type=int, default=100, help='number of episodes')
     parser.add_argument('--episode_length', type=int, default=10000, help='length of each episode')
     parser.add_argument('--num_disc_alpha', type=int, default=20, help='discretization of alpha')
@@ -36,13 +37,14 @@ def main():
 
     # Initialize
     env = PendulumEnv()
-    learner = QLearning(
+    learner = SarsaLambda(
         env=env,
         state_quantizer=StateQuantizer(
             num_disc_alpha=args.num_disc_alpha,
             num_disc_alpha_dot=args.num_disc_alpha_dot,
         ),
         action_quantizer=ActionQuantizer(num_u=args.num_u),
+        lambd=args.lambd,
     )
 
     # Train
