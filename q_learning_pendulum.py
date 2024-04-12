@@ -56,7 +56,7 @@ def main():
     # Test
     states, actions, rewards = learner.test(episode_length=1000)
     env.plot_curve(states, actions, rewards, os.path.join(logdir, 'test.png'))
-    env.animate(states, actions, os.path.join(logdir, 'test.mp4'))
+    env.animate(states, actions, os.path.join(logdir, 'test.gif'))
 
 
 if __name__ == '__main__':

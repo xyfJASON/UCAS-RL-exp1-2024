@@ -3,7 +3,7 @@ from typing import Tuple, List
 
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.animation as ani
+import matplotlib.animation as animation
 
 from envs.base import BaseEnv, BaseQuantizer
 
@@ -131,22 +131,25 @@ class PendulumEnv(BaseEnv):
         plt.figure(figsize=(20, 5))
         plt.subplot(1, 4, 1)
         plt.plot(rewards)
+        plt.plot([0] * len(rewards), '--')
         plt.title('reward')
 
         plt.subplot(1, 4, 2)
         plt.plot([state.alpha for state in states])
+        plt.plot([0] * len(states), '--')
         plt.ylim(-np.pi - 0.5, np.pi + 0.5)
         plt.title('alpha')
 
         plt.subplot(1, 4, 3)
         plt.plot([state.alpha_dot for state in states])
+        plt.plot([0] * len(states), '--')
         plt.ylim(-15 * np.pi - 5, 15 * np.pi + 5)
         plt.title('alpha_dot')
 
         plt.subplot(1, 4, 4)
         plt.plot([action.u for action in actions])
         plt.ylim(-3.5, 3.5)
-        plt.title('action')
+        plt.title('u')
 
         plt.tight_layout()
         plt.savefig(save_path)
@@ -171,6 +174,7 @@ class PendulumEnv(BaseEnv):
             text.set_text(str(actions[i].u))
             return line, text
 
-        animator = ani.FuncAnimation(fig, draw, frames=len(xs), interval=5)
-        animator.save(save_path, fps=50)
+        ani = animation.FuncAnimation(fig, draw, frames=len(xs), interval=5)
+        writer = animation.PillowWriter(fps=50, bitrate=1800)
+        ani.save(save_path, writer=writer)
         plt.close()
