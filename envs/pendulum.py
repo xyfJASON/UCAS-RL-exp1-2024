@@ -12,9 +12,9 @@ class State:
     alpha_dot: float
 
     def __post_init__(self):
-        if not (-np.pi <= self.alpha < np.pi):
+        if not -np.pi <= self.alpha < np.pi:
             raise ValueError(f'alpha must be in [-π, π). Got {self.alpha}.')
-        if not (-15 * np.pi <= self.alpha_dot <= 15 * np.pi):
+        if not -15 * np.pi <= self.alpha_dot <= 15 * np.pi:
             raise ValueError(f'alpha_dot must be in [-15π, 15π]. Got {self.alpha_dot}.')
 
 
@@ -23,7 +23,7 @@ class Action:
     u: float
 
     def __post_init__(self):
-        if not (-3 <= self.u <= 3):
+        if not -3 <= self.u <= 3:
             raise ValueError(f'u must be in [-3, 3]. Got {self.u}.')
 
 
@@ -32,13 +32,13 @@ class StateQuantizer:
         self.alpha_table = alpha_table
         self.alpha_dot_table = alpha_dot_table
 
-    def element_to_idx(self, state: State) -> int:
+    def state_to_idx(self, state: State) -> int:
         alpha_idx = np.argmin(np.abs(self.alpha_table - state.alpha))
         alpha_dot_idx = np.argmin(np.abs(self.alpha_dot_table - state.alpha_dot))
         state_idx = alpha_idx * len(self.alpha_dot_table) + alpha_dot_idx
         return state_idx
 
-    def idx_to_element(self, state_idx: int) -> State:
+    def idx_to_state(self, state_idx: int) -> State:
         alpha_idx, alpha_dot_idx = divmod(state_idx, len(self.alpha_dot_table))
         alpha = self.alpha_table[alpha_idx].item()
         alpha_dot = self.alpha_dot_table[alpha_dot_idx].item()
@@ -46,14 +46,14 @@ class StateQuantizer:
 
 
 class ActionQuantizer:
-    def __init__(self, action_table: np.ndarray):
-        self.action_table = action_table
+    def __init__(self, u_table: np.ndarray):
+        self.u_table = u_table
 
-    def element_to_idx(self, action: Action) -> int:
-        return np.argmin(np.abs(self.action_table - action.u))
+    def action_to_idx(self, action: Action) -> int:
+        return np.argmin(np.abs(self.u_table - action.u))
 
-    def idx_to_element(self, action_idx: int) -> Action:
-        return Action(self.action_table[action_idx].item())
+    def idx_to_action(self, action_idx: int) -> Action:
+        return Action(self.u_table[action_idx].item())
 
 
 class PendulumEnv(BaseEnv):
@@ -133,20 +133,20 @@ class PendulumDiscObsEnv(PendulumEnv):
             alpha_dot_table=np.linspace(-15 * np.pi, 15 * np.pi, num_disc_alpha_dot),
         )
         self.action_quantizer = ActionQuantizer(
-            action_table=np.linspace(-3, 3, num_actions),
+            u_table=np.linspace(-3, 3, num_actions),
         )
 
-        self.state_idx = self.state_quantizer.element_to_idx(self.state)
+        self.state_idx = self.state_quantizer.state_to_idx(self.state)
 
     def get_state(self) -> int:
         return self.state_idx
 
     def reset(self):
         super().reset()
-        self.state_idx = self.state_quantizer.element_to_idx(self.state)
+        self.state_idx = self.state_quantizer.state_to_idx(self.state)
 
     def update(self, action_idx: int) -> Tuple[int, float]:
-        action = self.action_quantizer.idx_to_element(action_idx)
+        action = self.action_quantizer.idx_to_action(action_idx)
         _, reward = super().update(action)
-        self.state_idx = self.state_quantizer.element_to_idx(self.state)
+        self.state_idx = self.state_quantizer.state_to_idx(self.state)
         return self.state_idx, reward
