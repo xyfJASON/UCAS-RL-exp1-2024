@@ -5,8 +5,8 @@ import datetime
 
 import numpy as np
 
-from envs.pendulum import PendulumDiscObsEnv
 from learners.q_learning import QLearning
+from envs.pendulum import PendulumEnv, StateQuantizer, ActionQuantizer
 
 
 def get_parser():
@@ -18,7 +18,7 @@ def get_parser():
     parser.add_argument('--episode_length', type=int, default=1000, help='length of each episode')
     parser.add_argument('--num_disc_alpha', type=int, default=20, help='discretization of alpha')
     parser.add_argument('--num_disc_alpha_dot', type=int, default=20, help='discretization of alpha_dot')
-    parser.add_argument('--num_actions', type=int, default=3, help='number of actions')
+    parser.add_argument('--num_u', type=int, default=3, help='discretization of u')
     return parser
 
 
@@ -31,12 +31,15 @@ def main():
         yaml.dump(args.__dict__, f, default_flow_style=False)
 
     # Initialize
-    env = PendulumDiscObsEnv(
-        num_disc_alpha=args.num_disc_alpha,
-        num_disc_alpha_dot=args.num_disc_alpha_dot,
-        num_actions=args.num_actions,
+    env = PendulumEnv()
+    learner = QLearning(
+        env=env,
+        state_quantizer=StateQuantizer(
+            num_disc_alpha=args.num_disc_alpha,
+            num_disc_alpha_dot=args.num_disc_alpha_dot,
+        ),
+        action_quantizer=ActionQuantizer(num_u=args.num_u),
     )
-    learner = QLearning(env)
 
     # Train
     learner.train(

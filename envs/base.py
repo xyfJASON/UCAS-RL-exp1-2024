@@ -15,18 +15,6 @@ class BaseEnv(ABC):
         pass
 
     @abstractmethod
-    def get_info(self) -> Tuple[Any, Any, float]:
-        """Get the information of the environment.
-
-        Returns:
-            state: The current state of the environment.
-            action: The most recent action taken by the agent.
-            reward: The reward of the action.
-
-        """
-        pass
-
-    @abstractmethod
     def reset(self):
         """Reset the environment."""
         pass
@@ -54,4 +42,22 @@ class BaseEnv(ABC):
             is_terminated: True if the environment is terminated, False otherwise.
 
         """
+        pass
+
+
+class BaseQuantizer(ABC):
+
+    @property
+    @abstractmethod
+    def size(self) -> int:
+        pass
+
+    @abstractmethod
+    def element_to_idx(self, element: Any) -> int:
+        """Convert an element to an index."""
+        pass
+
+    @abstractmethod
+    def idx_to_element(self, idx: int) -> Any:
+        """Convert an index to an element."""
         pass
