@@ -7,7 +7,6 @@ import numpy as np
 
 from envs.pendulum import PendulumDiscObsEnv
 from learners.q_learning import QLearning
-from utils import plot, animate_pendulum
 
 
 def get_parser():
@@ -53,8 +52,8 @@ def main():
 
     # Test
     states, actions, rewards = learner.test(episode_length=1000)
-    plot(states, actions, rewards, os.path.join(logdir, 'test.png'))
-    animate_pendulum(states, actions, os.path.join(logdir, 'test.mp4'))
+    env.plot_curve(states, actions, rewards, os.path.join(logdir, 'test.png'))
+    env.animate(states, actions, os.path.join(logdir, 'test.mp4'))
 
 
 if __name__ == '__main__':
