@@ -11,7 +11,10 @@ from envs.pendulum import PendulumEnv, StateQuantizer, ActionQuantizer
 
 def get_parser():
     parser = argparse.ArgumentParser()
+    # system
     parser.add_argument('--logdir', type=str, help='log directory')
+    parser.add_argument('--no-test-gif', action='store_true', help='do not save test gif')
+    # hyper-parameters
     parser.add_argument('--alpha', type=float, default=0.1, help='learning rate')
     parser.add_argument('--gamma', type=float, default=0.98, help='discount factor')
     parser.add_argument('--epsilon', type=float, default=0.1, help='epsilon-greedy policy')
@@ -61,7 +64,8 @@ def main():
     states, actions, rewards = learner.test(episode_length=1000)
     np.save(os.path.join(args.logdir, 'test_rewards.npy'), rewards)
     env.plot_curve(states, actions, rewards, os.path.join(args.logdir, 'test.png'))
-    env.animate(states, actions, os.path.join(args.logdir, 'test.gif'))
+    if not args.no_test_gif:
+        env.animate(states, actions, os.path.join(args.logdir, 'test.gif'))
 
 
 if __name__ == '__main__':
