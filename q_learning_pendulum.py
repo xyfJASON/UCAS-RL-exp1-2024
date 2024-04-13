@@ -23,6 +23,9 @@ def get_parser():
     parser.add_argument('--num_disc_alpha', type=int, default=20, help='discretization of alpha')
     parser.add_argument('--num_disc_alpha_dot', type=int, default=20, help='discretization of alpha_dot')
     parser.add_argument('--num_u', type=int, default=3, help='discretization of u')
+    # special discretization method for pendulum problem
+    parser.add_argument('--power_disc_alpha', type=int, default=1, help='power of discretization of alpha')
+    parser.add_argument('--power_disc_alpha_dot', type=int, default=1, help='power of discretization of alpha_dot')
     return parser
 
 
@@ -39,11 +42,26 @@ def main():
 
     # Initialize
     env = PendulumEnv()
+
+    def func(array, power):
+        result = array ** power
+        if power % 2 == 0:
+            result *= np.sign(array)
+        return result
+
+    uni = np.arange(-1, 1, 2 / args.num_disc_alpha)
+    alpha_table = func(uni, args.power_disc_alpha) * np.pi
+
+    uni = np.linspace(-1, 1, args.num_disc_alpha_dot)
+    alpha_dot_table = func(uni, args.power_disc_alpha_dot) * 15 * np.pi
+
     learner = QLearning(
         env=env,
         state_quantizer=StateQuantizer(
             num_disc_alpha=args.num_disc_alpha,
             num_disc_alpha_dot=args.num_disc_alpha_dot,
+            alpha_table=alpha_table,
+            alpha_dot_table=alpha_dot_table,
         ),
         action_quantizer=ActionQuantizer(num_u=args.num_u),
     )

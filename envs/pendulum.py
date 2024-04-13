@@ -43,6 +43,8 @@ class StateQuantizer(BaseQuantizer):
             alpha_dot_table = np.linspace(-15 * np.pi, 15 * np.pi, num_disc_alpha_dot)
         self.alpha_table = alpha_table
         self.alpha_dot_table = alpha_dot_table
+        assert len(self.alpha_table) == num_disc_alpha
+        assert len(self.alpha_dot_table) == num_disc_alpha_dot
 
     @property
     def size(self) -> int:
